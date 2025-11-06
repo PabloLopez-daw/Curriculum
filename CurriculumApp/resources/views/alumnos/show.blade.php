@@ -23,9 +23,7 @@
         @if($alumno->curriculum_path_public)
             <a href="{{ asset('storage/'.$alumno->curriculum_path_public) }}" class="btn btn-outline-primary" target="_blank">Ver copia pública PDF</a>
         @endif
-        @if($alumno->curriculum_path_private)
-            <a href="{{ route('alumnos.download', $alumno) }}" class="btn btn-primary">Descargar desde privado</a>
-        @endif
+
     </div>
 </div>
 
