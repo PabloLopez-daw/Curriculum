@@ -132,6 +132,6 @@ class AlumnoController extends Controller
 
     public function descargarCV(Alumno $alumno)
     {
-        return Storage::disk('private')->download($alumno->curriculum_path_private);
+        return Storage::disk('local')->download($alumno->curriculum_path_private);
     }
 }
