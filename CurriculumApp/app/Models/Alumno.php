@@ -6,8 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class Alumno extends Model
 {
-    use HasFactory;
-
     protected $table = 'alumnos';
 
     protected $fillable = [
@@ -23,10 +21,5 @@ class Alumno extends Model
         'fotografia',
         'curriculum_path_private',
         'curriculum_path_public',
-    ];
-
-    protected $casts = [
-        'fecha_nacimiento' => 'date',
-        'nota_media' => 'decimal:2',
     ];
 }
