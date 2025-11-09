@@ -22,20 +22,6 @@ class AlumnoController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
-        'nombre' => 'required|string|max:255',
-        'apellidos' => 'required|string|max:255',
-        'correo' => 'required|email|unique:alumnos',
-        'telefono' => 'nullable|string|max:20',
-        'fecha_nacimiento' => 'nullable|date',
-        'nota_media' => 'nullable|numeric',
-        'experiencia' => 'nullable|string',
-        'formacion' => 'nullable|string',
-        'habilidades' => 'nullable|string',
-        'fotografia' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
-        'curriculum' => 'nullable|mimes:pdf|max:2048',
-    ]);
-
 
     $data = $request->all();
 
