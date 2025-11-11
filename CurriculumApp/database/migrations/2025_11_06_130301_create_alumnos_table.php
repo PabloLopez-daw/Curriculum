@@ -5,9 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration {
-    /**
-     * Run the migrations.
-     */
+
     public function up()
     {
         Schema::create('alumnos', function (Blueprint $table) {
@@ -17,7 +15,7 @@ return new class extends Migration {
             $table->string('telefono')->nullable();
             $table->string('correo')->unique();
             $table->date('fecha_nacimiento')->nullable();
-            $table->decimal('nota_media', 4, 2)->nullable(); // ej. 9.50
+            $table->decimal('nota_media', 4, 2)->nullable();
             $table->text('experiencia')->nullable();
             $table->text('formacion')->nullable();
             $table->text('habilidades')->nullable();
@@ -29,9 +27,6 @@ return new class extends Migration {
     }
 
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('alumnos');
