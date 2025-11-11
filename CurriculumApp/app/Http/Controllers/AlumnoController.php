@@ -130,8 +130,4 @@ class AlumnoController extends Controller
         return redirect()->route('alumnos.index')->with('success', 'Alumno eliminado correctamente.');
     }
 
-    public function descargarCV(Alumno $alumno)
-    {
-        return Storage::disk('local')->download($alumno->curriculum_path_private);
-    }
 }
