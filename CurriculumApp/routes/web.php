@@ -12,5 +12,3 @@ Route::get('/alumnos/{alumno}', [AlumnoController::class, 'show'])->name('alumno
 Route::get('/alumnos/{alumno}/edit', [AlumnoController::class, 'edit'])->name('alumnos.edit');
 Route::put('/alumnos/{alumno}', [AlumnoController::class, 'update'])->name('alumnos.update');
 Route::delete('/alumnos/{alumno}', [AlumnoController::class, 'destroy'])->name('alumnos.destroy');
-
-Route::get('/alumnos/{alumno}/descargar-cv', [AlumnoController::class, 'descargarCV'])->name('alumnos.descargarCV');
