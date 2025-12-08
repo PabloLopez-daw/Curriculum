@@ -12,21 +12,15 @@ class AlumnoController extends Controller
 {
     public function index()
     {
-        try {
-            $alumnos = Alumno::all();
-            return view('alumnos.index', compact('alumnos'));
-        } catch (Exception $e) {
-            return redirect()->back()->with('error', 'Ocurrió un error al cargar la lista de alumnos.');
-        }
+        
+        $alumnos = Alumno::all();
+        return view('alumnos.index', compact('alumnos'));
+
     }
 
     public function create()
     {
-        try {
-            return view('alumnos.create');
-        } catch (Exception $e) {
-            return redirect()->back()->with('error', 'No se pudo cargar el formulario.');
-        }
+       return view('alumnos.create');
     }
 
     public function store(Request $request)
@@ -46,9 +40,8 @@ class AlumnoController extends Controller
             'curriculum'       => 'nullable|mimes:pdf|max:5120', 
         ]);
 
-        try {
-            // Usamos $validatedData o $request->all(), pero ya sabemos que son válidos.
-            $data = $request->all();
+
+                    $data = $request->all();
 
             $nombre = $request->input('nombre');
             $apellidos = $request->input('apellidos');
@@ -57,6 +50,9 @@ class AlumnoController extends Controller
             $baseName = Str::slug($nombre . ' ' . $apellidos);
             $timestamp = now()->format('Ymd_His'); 
             $baseFileName = "{$baseName}_{$timestamp}";
+        try {
+            // Usamos $validatedData o $request->all(), pero ya sabemos que son válidos.
+
 
             // Subida de Fotografía
             if ($request->hasFile('fotografia')) {
