@@ -6,128 +6,179 @@ use Illuminate\Support\Str;
 use App\Models\Alumno;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Exception;
 
 class AlumnoController extends Controller
 {
     public function index()
     {
-        $alumnos = Alumno::paginate(10);
-        return view('alumnos.index', compact('alumnos'));
+        try {
+            $alumnos = Alumno::all();
+            return view('alumnos.index', compact('alumnos'));
+        } catch (Exception $e) {
+            return redirect()->back()->with('error', 'Ocurrió un error al cargar la lista de alumnos.');
+        }
     }
 
     public function create()
     {
-        return view('alumnos.create');
+        try {
+            return view('alumnos.create');
+        } catch (Exception $e) {
+            return redirect()->back()->with('error', 'No se pudo cargar el formulario.');
+        }
     }
 
     public function store(Request $request)
     {
+        
+        $validatedData = $request->validate([
+            'nombre'           => 'required|string|max:255',
+            'apellidos'        => 'required|string|max:255',
+            'correo'           => 'required|email|unique:alumnos,correo', 
+            'telefono'         => 'nullable|string|max:20',
+            'fecha_nacimiento' => 'nullable|date',
+            'nota_media'       => 'nullable|numeric|between:0,10',
+            'experiencia'      => 'nullable|string',
+            'formacion'        => 'nullable|string',
+            'habilidades'      => 'nullable|string',
+            'fotografia'       => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', 
+            'curriculum'       => 'nullable|mimes:pdf|max:5120', 
+        ]);
 
-    $data = $request->all();
+        try {
+            // Usamos $validatedData o $request->all(), pero ya sabemos que son válidos.
+            $data = $request->all();
 
-    $nombre = $request->input('nombre');
-    $apellidos = $request->input('apellidos');
-    $baseName = Str::slug($nombre . ' ' . $apellidos);
-    $timestamp = now()->format('Ymd_His'); 
-    $baseFileName = "{$baseName}_{$timestamp}";
+            $nombre = $request->input('nombre');
+            $apellidos = $request->input('apellidos');
+            
+            // Generación del nombre de archivo personalizado
+            $baseName = Str::slug($nombre . ' ' . $apellidos);
+            $timestamp = now()->format('Ymd_His'); 
+            $baseFileName = "{$baseName}_{$timestamp}";
 
- 
-    if ($request->hasFile('fotografia')) {
-        $foto = $request->file('fotografia');
-        $extension = $foto->getClientOriginalExtension();
+            // Subida de Fotografía
+            if ($request->hasFile('fotografia')) {
+                $foto = $request->file('fotografia');
+                $extension = $foto->getClientOriginalExtension();
+                $fileName = "{$baseFileName}.{$extension}";
 
-      
-        $fileName = "{$baseFileName}.{$extension}";
+                $pathFoto = $foto->storeAs('alumnos/fotos', $fileName, 'public');
+                $data['fotografia'] = $pathFoto; 
+            }
 
-     
-        $pathFoto = $foto->storeAs('alumnos/fotos', $fileName, 'public');
+            // Subida de Curriculum
+            if ($request->hasFile('curriculum')) {
+                $pdf = $request->file('curriculum');
+                $extensionPdf = $pdf->getClientOriginalExtension();
+                $fileNamePdf = "{$baseFileName}_cv.{$extensionPdf}";
+                
+                // Guardar en local y public
+                $pathPrivate = $pdf->storeAs('alumnos/curriculums', $fileNamePdf, 'local');
+                $pathPublic = $pdf->storeAs('alumnos/curriculums', $fileNamePdf, 'public');
 
-        $data['fotografia'] = $pathFoto; 
-    }
+                $data['curriculum_path_private'] = $pathPrivate;
+                $data['curriculum_path_public'] = $pathPublic;
+            }
 
+            Alumno::create($data);
+            return redirect()->route('alumnos.index')->with('success', 'Alumno creado correctamente.');
 
-    if ($request->hasFile('curriculum')) {
-        $pdf = $request->file('curriculum');
-        $extensionPdf = $pdf->getClientOriginalExtension();
-
-    
-        $fileNamePdf = "{$baseFileName}_cv.{$extensionPdf}";
-        $pathPrivate = $pdf->storeAs('alumnos/curriculums', $fileNamePdf, 'local');
-        $pathPublic = $pdf->storeAs('alumnos/curriculums', $fileNamePdf, 'public');
-
-        $data['curriculum_path_private'] = $pathPrivate;
-        $data['curriculum_path_public'] = $pathPublic;
-    }
-
-        if ($request->hasFile('fotografia')) {
-            $data['fotografia'] = $request->file('fotografia')->store('fotos', 'public');
+        } catch (Exception $e) {
+            // Es buena práctica loguear el error para depurar: Log::error($e->getMessage());
+            return redirect()->back()->withInput()->with('error', 'Ocurrió un error al crear el alumno.');
         }
-
-        if ($request->hasFile('curriculum')) {
-            $data['curriculum_path_private'] = $request->file('curriculum')->store('curriculums', 'local');
-            $data['curriculum_path_public'] = $request->file('curriculum')->store('curriculums', 'public');
-        }
-
-        Alumno::create($data);
-        return redirect()->route('alumnos.index')->with('success', 'Alumno creado correctamente.');
     }
 
     public function show(Alumno $alumno)
     {
-        return view('alumnos.show', compact('alumno'));
+        try {
+            return view('alumnos.show', compact('alumno'));
+        } catch (Exception $e) {
+            return redirect()->route('alumnos.index')->with('error', 'No se pudo cargar la información del alumno.');
+        }
     }
 
     public function edit(Alumno $alumno)
     {
-        return view('alumnos.edit', compact('alumno'));
+        try {
+            return view('alumnos.edit', compact('alumno'));
+        } catch (Exception $e) {
+            return redirect()->route('alumnos.index')->with('error', 'No se pudo cargar el formulario de edición.');
+        }
     }
 
     public function update(Request $request, Alumno $alumno)
     {
+        // 1. VALIDACIÓN DE DATOS PARA ACTUALIZACIÓN
         $request->validate([
-            'nombre' => 'required',
-            'apellidos' => 'required',
-            'correo' => 'required|email|unique:alumnos,correo,' . $alumno->id,
+            'nombre'           => 'required|string|max:255',
+            'apellidos'        => 'required|string|max:255',
+            'correo'           => 'required|email|unique:alumnos,correo,' . $alumno->id, 
+            'telefono'         => 'nullable|string|max:20',
+            'fecha_nacimiento' => 'nullable|date',
+            'nota_media'       => 'nullable|numeric|between:0,10',
+            'experiencia'      => 'nullable|string',
+            'formacion'        => 'nullable|string',
+            'habilidades'      => 'nullable|string',
+            'fotografia'       => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'curriculum'       => 'nullable|mimes:pdf|max:5120',
         ]);
 
-        $data = $request->all();
+        try {
+            $data = $request->all();
 
-        if ($request->hasFile('fotografia')) {
-            if ($alumno->fotografia) {
-                Storage::disk('public')->delete($alumno->fotografia);
+            // Lógica de actualización de Fotografía
+            if ($request->hasFile('fotografia')) {
+                if ($alumno->fotografia) {
+                    Storage::disk('public')->delete($alumno->fotografia);
+                }
+                
+                $data['fotografia'] = $request->file('fotografia')->store('alumnos/fotos', 'public');
             }
-            $data['fotografia'] = $request->file('fotografia')->store('fotos', 'public');
+
+            if ($request->hasFile('curriculum')) {
+                if ($alumno->curriculum_path_private) {
+                    Storage::disk('local')->delete($alumno->curriculum_path_private);
+                }
+                if ($alumno->curriculum_path_public) {
+                    Storage::disk('public')->delete($alumno->curriculum_path_public);
+                }
+                
+                // Subir nuevos
+                $data['curriculum_path_private'] = $request->file('curriculum')->store('alumnos/curriculums', 'local');
+                $data['curriculum_path_public'] = $request->file('curriculum')->store('alumnos/curriculums', 'public');
+            }
+
+            $alumno->update($data);
+            return redirect()->route('alumnos.index')->with('success', 'Alumno actualizado correctamente.');
+
+        } catch (Exception $e) {
+            return redirect()->back()->withInput()->with('error', 'Ocurrió un error al actualizar el alumno.');
         }
-
-        if ($request->hasFile('curriculum')) {
-            if ($alumno->curriculum_path_private) {
-                Storage::disk('private')->delete($alumno->curriculum_path_private);
-            }
-            if ($alumno->curriculum_path_public) {
-                Storage::disk('public')->delete($alumno->curriculum_path_public);
-            }
-            $data['curriculum_path_private'] = $request->file('curriculum')->store('curriculums', 'private');
-            $data['curriculum_path_public'] = $request->file('curriculum')->store('curriculums', 'public');
-        }
-
-        $alumno->update($data);
-        return redirect()->route('alumnos.index')->with('success', 'Alumno actualizado correctamente.');
     }
 
     public function destroy(Alumno $alumno)
     {
-        if ($alumno->fotografia) {
-            Storage::disk('public')->delete($alumno->fotografia);
-        }
-        if ($alumno->curriculum_path_private) {
-            Storage::disk('private')->delete($alumno->curriculum_path_private);
-        }
-        if ($alumno->curriculum_path_public) {
-            Storage::disk('public')->delete($alumno->curriculum_path_public);
-        }
+        try {
+            if ($alumno->fotografia) {
+                Storage::disk('public')->delete($alumno->fotografia);
+            }
 
-        $alumno->delete();
-        return redirect()->route('alumnos.index')->with('success', 'Alumno eliminado correctamente.');
+            if ($alumno->curriculum_path_public) {
+                Storage::disk('public')->delete($alumno->curriculum_path_public);
+            }
+
+            if ($alumno->curriculum_path_private) {
+                 Storage::disk('local')->delete($alumno->curriculum_path_private);
+            }
+
+            $alumno->delete();
+            return redirect()->route('alumnos.index')->with('success', 'Alumno eliminado correctamente.');
+
+        } catch (Exception $e) {
+            return redirect()->route('alumnos.index')->with('error', 'Ocurrió un error al eliminar el alumno.');
+        }
     }
-
 }

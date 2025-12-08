@@ -22,4 +22,8 @@ class Alumno extends Model
         'curriculum_path_private',
         'curriculum_path_public',
     ];
+
+    protected $casts = [
+        'fecha_nacimiento' => 'date',
+    ];
 }

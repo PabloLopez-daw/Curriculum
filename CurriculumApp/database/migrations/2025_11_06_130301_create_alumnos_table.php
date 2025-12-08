@@ -19,9 +19,9 @@ return new class extends Migration {
             $table->text('experiencia')->nullable();
             $table->text('formacion')->nullable();
             $table->text('habilidades')->nullable();
-            $table->string('fotografia')->nullable(); // ruta imagen (public)
-            $table->string('curriculum_path_private')->nullable(); // ruta en storage local (privado)
-            $table->string('curriculum_path_public')->nullable();  // ruta en storage public (storage/app/public)
+            $table->string('fotografia')->nullable(); 
+            $table->string('curriculum_path_private')->nullable(); 
+            $table->string('curriculum_path_public')->nullable();  
             $table->timestamps();
         });
     }
